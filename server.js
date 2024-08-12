@@ -10,19 +10,18 @@ const port = process.env.PORT || 3000;
 // Use CORS to allow cross-origin requests
 app.use(cors());
 
-// Use the local MongoDB connection string
-const uri = 'mongodb://localhost:27017/media-library';
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+// Use the MongoDB connection string
+const uri = 'mongodb://localhost:27017';
+const client = new MongoClient(uri);
 
 let db, collection;
 
-// Connect to local MongoDB
 client.connect().then(() => {
-    db = client.db('media-library');
+    db = client.db('media_library');
     collection = db.collection('media');
-    console.log('Connected to local MongoDB');
+    console.log('Connected to MongoDB');
 }).catch(err => {
-    console.error('Failed to connect to local MongoDB:', err);
+    console.error('Failed to connect to MongoDB:', err);
 });
 
 // Set up multer for file uploads
@@ -73,7 +72,6 @@ app.post('/upload', upload.fields([{ name: 'image' }, { name: 'song' }]), async 
 app.get('/media', async (req, res) => {
     try {
         const media = await collection.find({}).toArray(); // Fetch all documents
-        console.log('Fetched media from database:', media); // Log the fetched media
         res.status(200).json(media); // Send them back as JSON
     } catch (err) {
         console.error('Error retrieving all media files:', err);
@@ -81,15 +79,15 @@ app.get('/media', async (req, res) => {
     }
 });
 
-// Serve static files from the React frontend app
-app.use(express.static(path.join(__dirname, 'build')));
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'client/build')));
 
-// Catch-all handler to serve the React frontend's index.html file for any other route
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+    });
+}
 
-// Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
