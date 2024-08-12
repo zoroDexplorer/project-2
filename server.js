@@ -9,23 +9,25 @@ const port = process.env.PORT || 3000;
 
 // Use CORS to allow cross-origin requests
 app.use(cors());
+app.use(express.json());
 
-// MongoDB connection
-const uri = 'mongodb://localhost:27017';
-const client = new MongoClient(uri);
+// MongoDB Connection String
+const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 let db, collection;
 
+// Connect to MongoDB
 client.connect().then(() => {
     db = client.db('media_library');
     collection = db.collection('media');
     console.log('Connected to MongoDB');
+}).catch(err => {
+    console.error('Failed to connect to MongoDB:', err);
 });
 
 // Set up multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
-
-app.use(express.json());
 
 // POST route to upload both an image and a song
 app.post('/upload', upload.fields([{ name: 'image' }, { name: 'song' }]), async (req, res) => {
@@ -69,8 +71,9 @@ app.post('/upload', upload.fields([{ name: 'image' }, { name: 'song' }]), async 
 // GET route to retrieve all media files
 app.get('/media', async (req, res) => {
     try {
-        const media = await collection.find({}).toArray(); // Fetch all documents
-        res.status(200).json(media); // Send them back as JSON
+        const media = await collection.find({}).toArray();
+        console.log('Fetched media from database:', media);
+        res.status(200).json(media);
     } catch (err) {
         console.error('Error retrieving all media files:', err);
         res.status(500).send('Error retrieving media files');
