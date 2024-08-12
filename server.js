@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 // Use CORS to allow cross-origin requests
 app.use(cors());
 
-// Use the MongoDB connection string
+// MongoDB connection
 const uri = 'mongodb://localhost:27017';
 const client = new MongoClient(uri);
 
@@ -20,8 +20,6 @@ client.connect().then(() => {
     db = client.db('media_library');
     collection = db.collection('media');
     console.log('Connected to MongoDB');
-}).catch(err => {
-    console.error('Failed to connect to MongoDB:', err);
 });
 
 // Set up multer for file uploads
@@ -79,12 +77,12 @@ app.get('/media', async (req, res) => {
     }
 });
 
-// Serve static assets in production
+// Serve static assets if in production
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'client/build')));
+    app.use(express.static(path.join(__dirname, 'build')));
 
     app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+        res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
     });
 }
 
