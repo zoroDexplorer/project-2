@@ -4,20 +4,26 @@ const multer = require('multer');
 const cors = require('cors');
 
 const app = express();
-const port = 3000;
+
+// Use the environment's PORT or default to 3000
+const port = process.env.PORT || 3000;
 
 // Use CORS to allow cross-origin requests
 app.use(cors());
 
-const uri = 'mongodb://localhost:27017';
-const client = new MongoClient(uri);
+// MongoDB URI (use environment variable for production)
+const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/media-library';
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 let db, collection;
 
+// Connect to MongoDB
 client.connect().then(() => {
     db = client.db('media_library');
     collection = db.collection('media');
     console.log('Connected to MongoDB');
+}).catch(err => {
+    console.error('Failed to connect to MongoDB', err);
 });
 
 // Set up multer for file uploads
@@ -75,6 +81,7 @@ app.get('/media', async (req, res) => {
     }
 });
 
+// Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
